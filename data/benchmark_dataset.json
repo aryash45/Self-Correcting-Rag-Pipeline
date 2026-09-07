@@ -1,0 +1,144 @@
+﻿{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "metadata": {
+    "dataset_name": "ai_ml_rag_benchmark",
+    "version": "1.0.0",
+    "domain": "Machine Learning & Generative AI Systems",
+    "num_documents": 10,
+    "num_qa_pairs": 10
+  },
+  "documents": [
+    {
+      "id": "doc_001",
+      "title": "Low-Rank Adaptation (LoRA) and QLoRA for Parameter-Efficient Fine-Tuning",
+      "content": "LoRA fine-tunes large language models by decomposing weight update matrices into two low-rank matrices: W = W0 + BA, where B is in R^(d x r) and A is in R^(r x k), with rank r much less than min(d, k). Typical ranks used in practice are r=4, r=8, or r=16, reducing trainable parameters by 10,000x on 7B-parameter models. Only A and B are updated; W0 remains frozen. QLoRA extends this by quantizing the base model to 4-bit NormalFloat (NF4) precision using double quantization, reducing VRAM from ~28 GB to ~6 GB for 7B models. The adapter is trained in BFloat16. LoRA introduces no inference latency because BA can be merged into W0 post-training. Scaling factor alpha/r controls effective learning rate; alpha=16 with r=8 is a common configuration in instruction-tuning benchmarks."
+    },
+    {
+      "id": "doc_002",
+      "title": "HNSW: Hierarchical Navigable Small World Graph Indexing for Approximate Nearest Neighbor Search",
+      "content": "HNSW constructs a multi-layer proximity graph where each node represents a vector and edges connect nearest neighbors. The bottom layer (layer 0) contains all vectors with dense connections; higher layers contain exponentially fewer nodes, acting as express highways. During search, traversal begins at the top layer entry point and greedily descends, following edges that minimize distance to the query vector. Construction complexity is O(N log N) with parameter M controlling the maximum number of bidirectional links per node (typically M=16 or M=32). The ef parameter (exploration factor) governs beam width during search; ef=200 yields greater than 99% recall at approximately 1ms latency for 1M 768-dimensional vectors. Space complexity is O(N*M*layers). Unlike IVF indexes, HNSW requires no cluster training phase and supports incremental insertion without full reindexing."
+    },
+    {
+      "id": "doc_003",
+      "title": "Speculative Decoding: Accelerating Autoregressive LLM Inference with Draft Models",
+      "content": "Speculative decoding uses a small draft model (e.g., a 68M or 160M parameter model) to propose K candidate tokens in parallel, which the large target model (e.g., 70B) verifies in a single forward pass via batch evaluation. If the target model probability distribution matches the draft proposal above a threshold, the token is accepted; otherwise, it is rejected and a corrected token is sampled. Accepted tokens require only one target-model pass for K tokens instead of K passes, yielding 2-4x wall-clock speedup with zero degradation in output distribution. The acceptance rate depends on draft-target alignment; using the same model family (e.g., Llama-3-8B drafting for Llama-3-70B) achieves 70-80% acceptance rates. Speculative decoding is bandwidth-limited, not compute-limited, making it most effective on memory-constrained hardware like A100-40GB GPUs."
+    },
+    {
+      "id": "doc_004",
+      "title": "Multi-Head Latent Attention (MLA): Compressed KV Cache via Low-Rank Projection",
+      "content": "Multi-Head Latent Attention, introduced in DeepSeek-V2, compresses the KV cache by projecting keys and values into a shared low-dimensional latent space before storage. Instead of caching H*d_head K and V tensors per layer (standard MHA), MLA caches a single compressed latent vector c_KV of dimension d_c (typically d_c=512, versus d_model=4096), reducing KV cache size by up to 93.3%. At inference, K and V are reconstructed via learned up-projection matrices W_UK and W_UV: K = W_UK * c_KV. A separate rope-decoupled key c_K_R is stored for positional encoding compatibility. MLA preserves model quality within 0.5% perplexity of standard MHA while reducing per-token KV memory from 2*H*d_head bytes to d_c bytes. DeepSeek-V2-236B achieves throughput 5.76x higher than comparable MHA models due to reduced memory bandwidth pressure."
+    },
+    {
+      "id": "doc_005",
+      "title": "Direct Preference Optimization (DPO): Reward-Free RLHF via Contrastive Loss",
+      "content": "Direct Preference Optimization bypasses the explicit reward model required by PPO-based RLHF by reparameterizing the reward function in terms of the language model log-probabilities. The DPO loss is: L_DPO = -E[log sigma(beta*(log pi_theta(y_w|x)/pi_ref(y_w|x) - log pi_theta(y_l|x)/pi_ref(y_l|x)))], where y_w and y_l are preferred and rejected completions, pi_ref is the frozen reference model, and beta (typically 0.1-0.5) controls KL divergence from the reference. Training requires only a dataset of preference pairs (x, y_w, y_l). DPO converges 2-3x faster than PPO and eliminates reward model training, online sampling, and value function estimation. On AlpacaEval 2.0, DPO-trained Llama-3-8B achieves 22.9% win rate against GPT-4-Turbo, competitive with PPO-based methods. A key limitation is sensitivity to data quality: noisy preference pairs can degrade alignment."
+    },
+    {
+      "id": "doc_006",
+      "title": "Hybrid Retrieval with BM25, Dense Embeddings, and Reciprocal Rank Fusion",
+      "content": "Hybrid retrieval combines BM25 lexical scores with dense vector similarity scores using Reciprocal Rank Fusion (RRF): RRF(d) = sum_r 1/(k + rank_r(d)), where k=60 is the smoothing constant and rank_r(d) is document d rank in retrieval list r. BM25 uses term frequency (TF), inverse document frequency (IDF), and document length normalization via parameter b=0.75 and k1=1.2. Dense retrieval uses bi-encoder models (e.g., BGE-M3, E5-Mistral-7B) to embed queries and documents into 768-4096 dimensional vectors, retrieving by cosine similarity. RRF outperforms linear score interpolation (alpha*BM25 + (1-alpha)*dense) because it is score-scale-agnostic and requires no hyperparameter tuning. On BEIR benchmark, BM25+dense+RRF achieves 5-8% NDCG@10 improvement over either method alone, with gains largest on keyword-heavy domains like TREC-COVID and FiQA."
+    },
+    {
+      "id": "doc_007",
+      "title": "KV Cache Compression: Token Eviction, Quantization, and Memory Management",
+      "content": "KV cache stores key and value tensors for all past tokens, growing linearly as O(L*N*H*d_head) where L is layers, N is sequence length, H is heads, and d_head is head dimension. For a 70B LLaMA-2 model with 4096-length context, KV cache requires ~80 GB at FP16. Compression strategies include: (1) Token eviction - H2O and ScissorHands retain only the top-K high-attention tokens, reducing cache to O(L*K*H*d_head) with K much less than N; accuracy drop less than 1% at 20% retention. (2) KV quantization - storing K and V tensors in INT8 or INT4 reduces memory 2-4x; KIVI uses INT2 for values with group-size-32 quantization, achieving 2.7x memory reduction with less than 0.5% perplexity increase. (3) Multi-Query Attention (MQA) and GQA share K/V heads across query heads, reducing KV cache by factor equal to the number of query groups."
+    },
+    {
+      "id": "doc_008",
+      "title": "Rotary Position Embeddings (RoPE): Length Extrapolation via Rotation Matrices",
+      "content": "RoPE encodes token positions by rotating query and key vectors in 2D subspaces using a position-dependent rotation matrix R_theta_m, where theta_i = 10000^(-2i/d) for dimension index i and m is the token position. The inner product of (R_theta_m * q) and (R_theta_n * k) depends only on the relative position (m-n), enabling the model to generalize to positional offsets unseen during training. Unlike learned absolute position embeddings, RoPE requires no embedding table and integrates directly into the attention computation. YaRN (Yet another RoPE extensioN) scales the base frequency from 10000 to values up to 500000, extending effective context from 4096 to 128k tokens with minimal perplexity increase. RoPE is adopted in LLaMA, Mistral, Qwen, and DeepSeek model families. Positional interpolation (PI) linearly scales position indices to fit longer sequences into the trained range, reducing fine-tuning data requirements for context extension."
+    },
+    {
+      "id": "doc_009",
+      "title": "Post-Training Quantization: AWQ and GPTQ for Weight Compression",
+      "content": "AWQ (Activation-aware Weight Quantization) identifies the 1% of weights with the highest activation magnitudes as salient and protects them from aggressive quantization. Non-salient weights are quantized to INT4 using group-wise quantization (group size 128), while salient weights are scaled up before quantization to minimize rounding error. AWQ achieves less than 1% perplexity degradation on Llama-2-7B at W4A16 (4-bit weights, 16-bit activations), with 3.2x memory reduction and 1.45x GPU throughput improvement over FP16. GPTQ uses second-order information (approximate Hessian) via the Optimal Brain Compression framework, quantizing weights layer-by-layer in blocks of 128 columns. GPTQ at 4-bit achieves 3.9 bits per weight on average with perplexity within 0.25 of FP16 on WikiText-2. Both methods are calibration-based: AWQ uses ~128 samples from the training distribution; GPTQ uses ~1024 samples."
+    },
+    {
+      "id": "doc_010",
+      "title": "Contrastive Learning for Dense Embedding Spaces: SimCLR, NT-Xent, and Hard Negative Mining",
+      "content": "Contrastive learning trains encoders by maximizing similarity between positive pairs (x, x+) and minimizing similarity with negative pairs using the NT-Xent loss: L = -log[exp(sim(z_i, z_j)/tau) / sum_{k!=i} exp(sim(z_i, z_k)/tau)], where tau (temperature) is typically 0.07-0.1 and sim() denotes cosine similarity. In retrieval settings, in-batch negatives exploit the other queries in a mini-batch as negatives, scaling effectively with batch size (2048-8192). Hard negative mining selects negatives that are semantically close but factually distinct, improving encoder discrimination on ambiguous queries. MNRL (Multiple Negatives Ranking Loss) with 1 positive and N-1 in-batch negatives per anchor trains E5 and BGE-family models to MTEB leaderboard parity. Training on MS-MARCO with hard negatives mined via BM25 improves NDCG@10 by 8-12% versus random negatives. Temperature annealing (tau: 0.1 to 0.05) during training sharpens embedding cluster boundaries without collapse."
+    }
+  ],
+  "qa_pairs": [
+    {
+      "id": "qa_001",
+      "question": "What rank values are typically used in LoRA fine-tuning and how does it reduce trainable parameters?",
+      "expected_answer": "LoRA typically uses rank values of r=4, r=8, or r=16 to decompose weight update matrices into two low-rank matrices B and A. This decomposition reduces trainable parameters by 10,000x on 7B-parameter models, while the base weights W0 remain frozen throughout training.",
+      "ground_truth_doc_ids": ["doc_001"],
+      "query_type": "single_hop",
+      "eval_intent": "Tests basic retrieval of precise numerical parameters and the core LoRA mechanism. Expected answer is nearly contiguous in doc_001. Validates that the retriever ranks doc_001 first and the grader accepts exact-match paraphrase."
+    },
+    {
+      "id": "qa_002",
+      "question": "How does HNSW's ef parameter affect recall and latency during approximate nearest neighbor search?",
+      "expected_answer": "The ef (exploration factor) parameter in HNSW controls the beam width during graph traversal. Setting ef=200 yields greater than 99% recall at approximately 1ms latency for one million 768-dimensional vectors, allowing a direct trade-off between search accuracy and query speed.",
+      "ground_truth_doc_ids": ["doc_002"],
+      "query_type": "single_hop",
+      "eval_intent": "Validates retrieval of a concrete performance metric tied to a specific parameter. The answer requires locating the ef=200, >99% recall, and ~1ms figure from doc_002 without conflating with other ANN index types like IVF."
+    },
+    {
+      "id": "qa_003",
+      "question": "What speedup does speculative decoding achieve and why is it most effective on memory-constrained hardware?",
+      "expected_answer": "Speculative decoding yields a 2-4x wall-clock speedup with zero degradation in output quality by allowing the target model to verify K draft tokens in a single forward pass. It is most effective on memory-constrained hardware like A100-40GB GPUs because the bottleneck is memory bandwidth rather than raw compute.",
+      "ground_truth_doc_ids": ["doc_003"],
+      "query_type": "single_hop",
+      "eval_intent": "Tests retrieval of both the quantitative speedup metric and the architectural reason (bandwidth-limited, not compute-limited). Validates that the grader requires both facts for a complete answer, not just the 2-4x figure alone."
+    },
+    {
+      "id": "qa_004",
+      "question": "What is the DPO loss function and how does the beta parameter control model behavior?",
+      "expected_answer": "The DPO loss uses log sigma of beta times the difference in log probability ratios between preferred and rejected completions relative to a frozen reference model. The beta parameter, typically set between 0.1 and 0.5, controls the KL divergence of the trained model from the frozen reference model, preventing it from drifting too far during optimization.",
+      "ground_truth_doc_ids": ["doc_005"],
+      "query_type": "single_hop",
+      "eval_intent": "Tests whether the retriever can locate a formula-dense document and whether the grader can verify formula reproduction accuracy. Ensures the pipeline does not confuse DPO with PPO-based RLHF methods that also appear in the domain."
+    },
+    {
+      "id": "qa_005",
+      "question": "How does Reciprocal Rank Fusion combine BM25 and dense retrieval scores?",
+      "expected_answer": "RRF combines scores using the formula RRF(d) = sum_r 1/(k + rank_r(d)), where k=60 is a smoothing constant and rank_r(d) is the document rank in each retrieval list. This approach is score-scale-agnostic and requires no hyperparameter tuning, unlike linear score interpolation, and achieves 5-8% NDCG@10 improvement over either BM25 or dense retrieval alone on the BEIR benchmark.",
+      "ground_truth_doc_ids": ["doc_006"],
+      "query_type": "single_hop",
+      "eval_intent": "Validates retrieval of the exact RRF formula and its advantages over linear interpolation. Tests that the grader distinguishes between the two fusion strategies documented in doc_006 rather than producing a generic blend."
+    },
+    {
+      "id": "qa_006",
+      "question": "What is the NT-Xent loss formula used in contrastive learning and how does temperature affect training?",
+      "expected_answer": "The NT-Xent loss is L = -log[exp(sim(z_i, z_j)/tau) / sum_{k!=i} exp(sim(z_i, z_k)/tau)], where tau is the temperature parameter typically set between 0.07 and 0.1. Temperature annealing, where tau decreases from 0.1 to 0.05 during training, sharpens embedding cluster boundaries without causing representation collapse.",
+      "ground_truth_doc_ids": ["doc_010"],
+      "query_type": "single_hop",
+      "eval_intent": "Tests formula retrieval from the contrastive learning document. Validates that the grader checks for the presence of the temperature annealing technique, which is a non-obvious detail that a surface-level match might miss."
+    },
+    {
+      "id": "qa_007",
+      "question": "How do KV cache quantization techniques and AWQ weight quantization differ in their memory reduction strategies and accuracy trade-offs?",
+      "expected_answer": "KV cache quantization targets the runtime attention cache by storing key and value tensors in INT8 or INT4, with KIVI achieving 2.7x memory reduction at less than 0.5% perplexity increase using INT2 with group-size-32. AWQ targets model weights by protecting the 1% of salient weights from aggressive quantization while compressing non-salient weights to INT4, achieving 3.2x memory reduction with less than 1% perplexity degradation. The two techniques operate on complementary components - inference cache versus static weights - and can be applied simultaneously for compounded memory savings.",
+      "ground_truth_doc_ids": ["doc_007", "doc_009"],
+      "query_type": "multi_hop",
+      "eval_intent": "Tests multi-document synthesis by requiring the pipeline to retrieve both the KV cache compression document and the AWQ/GPTQ quantization document. Answer must contrast KIVI cache-targeting with AWQ weight-targeting; retrieving only one document cannot produce a complete answer. Validates context fusion and the grader ability to require facts from both sources."
+    },
+    {
+      "id": "qa_008",
+      "question": "How can a retrieval system trained with contrastive learning be combined with HNSW indexing to balance recall and query latency at scale?",
+      "expected_answer": "Contrastive learning trains bi-encoder models using NT-Xent loss and hard negative mining to produce high-quality dense embeddings with strong discrimination on ambiguous queries, as seen in E5 and BGE-family models. HNSW indexes these embeddings in a multi-layer graph where the ef parameter controls the recall-latency trade-off; ef=200 achieves greater than 99% recall at 1ms latency for one million vectors. Together, a contrastively trained encoder produces the dense vectors while HNSW provides sub-linear approximate search, enabling scalable high-recall retrieval without exhaustive comparison.",
+      "ground_truth_doc_ids": ["doc_002", "doc_010"],
+      "query_type": "multi_hop",
+      "eval_intent": "Tests synthesis across two architecturally orthogonal documents - embedding training (doc_010) and vector indexing (doc_002). Neither document alone answers the system-level question. Validates that the pipeline retrieves both, and the grader checks for both the encoder quality contribution and the HNSW ef trade-off in the final answer."
+    },
+    {
+      "id": "qa_009",
+      "question": "What position encoding method enables transformers to extrapolate to sequence lengths beyond their training window?",
+      "expected_answer": "Rotary Position Embeddings (RoPE) encode token positions by rotating query and key vectors using a position-dependent rotation matrix where the inner product depends only on the relative offset (m-n). YaRN extends this by scaling the base frequency up to 500,000, enabling context extension from 4096 to 128k tokens with minimal perplexity increase. This relative-position formulation allows natural extrapolation to sequence lengths beyond the training distribution.",
+      "ground_truth_doc_ids": ["doc_008"],
+      "query_type": "distractor_resistant",
+      "eval_intent": "Tests resistance to distractor documents. Doc_001 (LoRA) contains scaling and rank discussions; doc_004 (MLA) involves projection matrices and rope-decoupled keys - both share surface-level terminology with position encoding. A keyword-based retriever may rank these higher due to overlap with scaling and projection terms. The correct answer requires understanding that extrapolation to longer sequences is uniquely addressed by RoPE rotation formulation in doc_008. Validates that the relevance grader and reranker override an incorrect initial retrieval."
+    },
+    {
+      "id": "qa_010",
+      "question": "What are the compute scaling laws that govern sample efficiency during pretraining of large multimodal vision-language models?",
+      "expected_answer": "INSUFFICIENT_CONTEXT",
+      "ground_truth_doc_ids": [],
+      "query_type": "unanswerable",
+      "eval_intent": "Tests the pipeline refusal and fallback mechanism. All 10 documents cover fine-tuning, inference optimization, retrieval, and embedding techniques; none addresses multimodal pretraining scaling laws (Chinchilla-style compute-optimal token counts for vision-language models). A partial match might surface doc_001 (LoRA scaling), doc_003 (speculative decoding compute), or doc_009 (AWQ calibration samples), but none provides sufficient context. Validates that the relevance grader correctly assigns low confidence scores and triggers the INSUFFICIENT_CONTEXT fallback rather than hallucinating an answer."
+    }
+  ]
+}

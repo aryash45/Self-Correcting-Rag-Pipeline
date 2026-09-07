@@ -1,0 +1,6 @@
+anthropic
+sentence-transformers
+rank-bm25
+numpy
+pandas
+pytest
