@@ -9,25 +9,25 @@ A production-grade, modular Retrieval-Augmented Generation (RAG) system with hyb
 ```mermaid
 graph TD
     UserQuery([User Query]) --> Preprocessing[Query Analysis & Preprocessing]
-    
-    subgraph Retrieval Layer
+
+    subgraph retrievalLayer["Retrieval Layer"]
         Preprocessing --> BM25[BM25 Sparse Retriever]
         Preprocessing --> Dense[Dense Embedding Retriever]
         BM25 --> Hybrid[Hybrid Retriever / RRF Fusion]
         Dense --> Hybrid
     end
-    
-    subgraph Self-Correction & Evaluation Loop
+
+    subgraph correctionLoop["Self-Correction & Evaluation Loop"]
         Hybrid --> Evaluator[Relevance & Context Grader]
-        Evaluator -- Low Relevance / Missing Info --> QueryRewriter[Query Rewriter / Expansion]
-        QueryRewriter --> Retrieval Layer
-        Evaluator -- Sufficient Context --> Generator[Grounded LLM Generator]
+        Evaluator -- "Low Relevance / Missing Info" --> QueryRewriter[Query Rewriter / Expansion]
+        QueryRewriter --> retrievalLayer
+        Evaluator -- "Sufficient Context" --> Generator[Grounded LLM Generator]
     end
-    
-    subgraph Output Verification
+
+    subgraph verification["Output Verification"]
         Generator --> CitationVerifier[Citation Extractor & Verifier]
-        CitationVerifier -- Hallucination / Unsupported --> Generator
-        CitationVerifier -- Validated Citations --> FinalResponse([Final Verified Answer + Citations])
+        CitationVerifier -- "Hallucination / Unsupported" --> Generator
+        CitationVerifier -- "Validated Citations" --> FinalResponse([Final Verified Answer + Citations])
     end
 ```
 
@@ -165,7 +165,7 @@ print("Valid citation:", verify_citiations(citations, ground_truth))
 
 ## Evaluation Benchmark
 
-The benchmark dataset in [`data/benchmark_dataset.json`](file:///c:/Users/aryash/Downloads/Virtual%20try%20on/self-correcting-rag/data/benchmark_dataset.json) contains complex, technical machine learning topics (LoRA, HNSW, Speculative Decoding, MLA, DPO, etc.), pairing ground truth documents with specialized technical queries to evaluate retrieval and answer fidelity.
+The benchmark dataset in [`data/benchmark_dataset.json`](file:///c:/Users/aryash/Downloads/Virtual%20try%20on/self-correcting-rag/data/benchmark_dataset.json) contains complex, technical machine [...]
 
 ---
 
