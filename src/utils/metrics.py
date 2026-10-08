@@ -61,11 +61,16 @@ def ndcg_at_k(retrieved_ids: List[Union[str, Dict[str, Any]]], ground_truth_ids:
     idcg = sum(1.0 / np.log2(i + 2) for i in range(min(len(ground_truth_ids), k)))
     return dcg / idcg if idcg > 0 else 0.0
 
-def extract_citiations(text: str) -> List[str]:
+def extract_citations(text: str) -> List[str]:
     import re
     return re.findall(r"\[(doc_\d+)\]", text)
 
-def verify_citiations(citiations: List[str], ground_truth_ids: List[str]) -> bool:
-    if not citiations and not ground_truth_ids:
+def verify_citations(citations: List[str], ground_truth_ids: List[str]) -> bool:
+    if not citations and not ground_truth_ids:
         return True
-    return set(citiations) == set(ground_truth_ids)
+    return set(citations) == set(ground_truth_ids)
+
+# Backward-compatible aliases (typo variants kept for existing callers)
+extract_citiations = extract_citations
+verify_citiations = verify_citations
+

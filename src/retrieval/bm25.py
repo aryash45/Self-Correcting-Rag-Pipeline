@@ -1,5 +1,5 @@
 from rank_bm25 import BM25Okapi
-import string 
+import string
 class BM25Retriever:
     def __init__(self, documents):
         self.documents = documents
@@ -18,7 +18,10 @@ class BM25Retriever:
         tokenized_query = self._tokenize(query)
         scores = self.bm25.get_scores(tokenized_query)
         top_k_indices = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)[:k]
-        return [self.documents[i] for i in top_k_indices]
+        return [
+            {"document": self.documents[i], "score": float(scores[i])}
+            for i in top_k_indices
+        ]
 
 
 

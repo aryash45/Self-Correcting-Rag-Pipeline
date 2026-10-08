@@ -68,7 +68,7 @@ self-correcting-rag/
 - [x] **BM25 Sparse Retrieval**: Tokenization and BM25Okapi scoring (`src/retrieval/bm25.py`).
 - [x] **Dense Semantic Retrieval**: Vector indexing and cosine similarity with `all-MiniLM-L6-v2` (`src/retrieval/denseretriever.py`).
 - [x] **Retrieval & Citation Metrics**: `Recall@k`, `MRR@k`, `NDCG@k`, and citation consistency checking (`src/utils/metrics.py`).
-- [ ] **Hybrid Search Fusion**: Reciprocal Rank Fusion (RRF) / weighted score combination (`src/retrieval/hybridretriever.py`).
+- [x] **Hybrid Search Fusion**: Weighted score normalization and combination of BM25 + dense scores (`src/retrieval/hybridretriever.py`).
 - [ ] **Context & Relevance Grader**: Evaluating retrieval relevance and detecting knowledge gaps.
 - [ ] **Query Rewriting & Expansion**: Re-formulating ambiguous or poorly performing queries.
 - [ ] **Grounded Generation & Self-Correction**: Enforcing citation attribution and iterative refinement.
